@@ -32,7 +32,7 @@ st.title("🏆 EF CUP 2082 Team Prediction")
 user_name = st.text_input("Enter your name:")
 
 team_names = ["Godar Goats", "Acharya Attackers", "Soti Soldier",
-              "Zenith Zebra", "Baral Bulls", "Joshi Jaguars"]
+              "Zenith Zebra", "Benze Bulls", "Joshi Jaguars"]
 
 # Initialize session state ONCE only
 if 'initialized' not in st.session_state:
