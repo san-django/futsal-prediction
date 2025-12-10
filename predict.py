@@ -27,9 +27,9 @@ all_players = [
     "SUJAL SOTI", "SUDIP BARAL", "ZENITH SARU"
 ]
 
-st.title("🏆 Futsal Team Prediction")
+st.title("🏆 EF CUP 2082 Team Prediction")
 
-user_name = st.text_input("Enter your name / identifier:")
+user_name = st.text_input("Enter your name:")
 
 team_names = ["Godar Goats", "Acharya Attackers", "Soti Soldier",
               "Zenith Zebra", "Baral Bulls", "Joshi Jaguars"]
