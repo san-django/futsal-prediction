@@ -37,32 +37,25 @@ user_name = st.text_input("Enter your name / identifier:")
 team_names = ["Godar Goats", "Acharya Attackers", "Soti Soldier",
               "Zenith Zebra", "Baral Bulls", "Joshi Jaguars"]
 
-team_selection = {team: [] for team in team_names}
-used_players = set()
+# Use session_state so selections persist correctly on rerun
+if "team_selection" not in st.session_state:
+    st.session_state.team_selection = {team: [""] * 6 for team in team_names}
+if "used_players" not in st.session_state:
+    st.session_state.used_players = set()
+
+team_selection = st.session_state.team_selection
+used_players = st.session_state.used_players
 
 st.subheader("Select Players for Each Team")
 
 for team in team_names:
     st.write(f"### {team}")
     for i in range(6):
-        available_players = [p for p in all_players if p not in used_players]
-        if not available_players:
-            st.warning("No more players available!")
-            break
-        choice = st.selectbox(
-            f"Player {i+1} for {team}", options=available_players, key=f"{team}_{i}"
-        )
-        if choice not in team_selection[team]:
-            team_selection[team].append(choice)
-            used_players.add(choice)
+        # Remove previously selected player for this slot from used_players,
+        # so changing the choice will free that player.
+        prev_player = team_selection[team][i]
+        if prev_player in used_players:
+            used_players.remove(prev_player)
 
-if st.button("Save Prediction"):
-    if not user_name:
-        st.error("Please enter your name!")
-    else:
-        save_data = []
-        for team, players in team_selection.items():
-            save_data.append([user_name, team] + players)
-        for row in save_data:
-            prediction_sheet.append_row(row)
-        st.success("Prediction saved successfully!")
+        # Compute available players (not used anywhere
+
