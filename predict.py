@@ -1,100 +1,87 @@
-import json
-import os
 import streamlit as st
-import pandas as pd
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 
-# Load Excel file with player list
-
-print("Current working directory: ", os.getcwd())
-# changes the working directory to path where the project.py is ##
-# os.chdir('C:/Users/SANJAYA/python/futsal')
-excel_filename = r"player.xlsx"
-df = pd.read_excel(excel_filename)
-players = df.iloc[:, 0].dropna().astype(str).tolist()
-
-teams = ["Godar Goats", "Acharya Attackers", "Soti Soldiers",
-         "Zenith Zebras", "Baral Bulls", "Joshi Jaguars"]
-
-# Initialize session state
-if "team_selections" not in st.session_state:
-    st.session_state.team_selections = {team: [None]*6 for team in teams}
-
-st.title("🏆 Futsal Team Prediction")
-
-# ✅ Text input for participant name
-player_name = st.text_input("Enter your name / identifier:")
-
 # Google Sheets setup
+scope = [
+    "https://spreadsheets.google.com/feeds",
+    "https://www.googleapis.com/auth/drive"
+]
 
-# Load credentials from Streamlit secrets
-creds_dict = st.secrets["google_service_account"]
-creds_json = json.dumps(creds_dict)
-creds = ServiceAccountCredentials.from_json_keyfile_dict(
-    json.loads(creds_json),
-    ['https://spreadsheets.google.com/feeds',
-        'https://www.googleapis.com/auth/drive']
-)
+creds_dict = {
+    # Your service account credentials
+}
+
+creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
 gc = gspread.authorize(creds)
 
-# Function to get available players
+PREDICTION_SHEET_NAME = "Futsal_Predictions"
+prediction_sheet = gc.open(PREDICTION_SHEET_NAME).sheet1
 
+# Player list embedded
+all_players = ["SANGAM SHRESTHA", "SACHIN SEN", "SUJAN BK", "SUMAN CHHETRI", "SWORNIM TIMILSINA",
+               "PRASHANNA PAUDEL", "SUJAL PARAJULI", "SHUBHAM SINGH", "SHRIJAN BHUSAL", "ROJIT SHRESTHA (F)", "AAYUSH ROKA  (F)",
+               "ANUJ THAPA (F)",
+               "SANKALPA SHARMA",
+               "TANISHK THAPA",
+               "SUJIT GURUNG",
+               "SUJAN BHATTA",
+               "VIVEK GAUTAM",
+               "UDHAY THAKUR",
+               "SUSHAN PANDEY",
+               "SAKAR SUBEDI",
+               "SHYAM MAHATO"
+               "SHUSHANT ADHIKARI",
+               "TASHI SHERPA (F)",
+               "SABIN DAHAL",
+               "SAJAN ROKAYA",
+               "SANDIL KATUWAL",
+               "SANJAYA ADHIKARI",
+               "UNIQUE REGMI",
+               "SUMAN SHARMA",
+               "ANUPAM BISTA (F)",
+               "SAMEER ACHARYA",
+               "SAMIR GODAR",
+               "SANTOSH JOSHI",
+               "SUJAL SOTI",
+               "SUDIP BARAL",
+               "ZENITH SARU"
 
-def get_available_players(team, idx):
-    current_selection = st.session_state.team_selections[team][idx]
-    selected_other_slots = []
-    for t in teams:
-        for i, p in enumerate(st.session_state.team_selections[t]):
-            if t != team or i != idx:
-                if p:
-                    selected_other_slots.append(p)
-    available = [p for p in players if p not in selected_other_slots]
-    if current_selection and current_selection not in available:
-        available.append(current_selection)
-    return [""] + sorted(available)
+               # Add your 36 player names here
+               ]
 
+# Streamlit UI
+st.title("🏆 Futsal Team Prediction")
 
-# Dropdowns for each team
-for team in teams:
-    st.subheader(team)
-    cols = st.columns(2)
+user_name = st.text_input("Enter your name / identifier:")
+
+team_names = ["Godar Goats", "Acharya Attackers", "Soti Soldier",
+              "Zenith Zebra", "Baral Bulls", "Joshi Jaguars"]
+
+team_selection = {team: [] for team in team_names}
+used_players = set()
+
+st.subheader("Select Players for Each Team")
+
+for team in team_names:
+    st.write(f"### {team}")
     for i in range(6):
-        col = cols[i % 2]
-        options = get_available_players(team, i)
-        current_selection = st.session_state.team_selections[team][i]
-        index = 0 if current_selection is None else options.index(
-            current_selection)
-        selection = col.selectbox(
-            f"Player {i+1}", options, index=index, key=f"{team}_{i}")
-        st.session_state.team_selections[team][i] = selection if selection != "" else None
+        available_players = [p for p in all_players if p not in used_players]
+        if not available_players:
+            st.warning("No more players available!")
+            break
+        choice = st.selectbox(
+            f"Player {i+1} for {team}", options=available_players, key=f"{team}_{i}")
+        team_selection[team].append(choice)
+        used_players.add(choice)
 
-# Display current selections
-st.markdown("### 🏅 Current Team Selection")
-for t in teams:
-    st.markdown(f"**{t}**")
-    for i, p in enumerate(st.session_state.team_selections[t], start=1):
-        st.markdown(f"{i}. {p if p else '---'}")
-    st.markdown("---")
-
-# Save function to Google Sheet
-
-
-def save_to_sheet():
-    if not player_name:
-        st.error("⚠️ Please enter your name / identifier before saving.")
-        return
-
-    data = []
-    for t in teams:
-        for i, p in enumerate(st.session_state.team_selections[t], start=1):
-            data.append([player_name, t, i, p if p else ""])
-
-    # Append each row to Google Sheet
-    for row in data:
-        sheet.append_row(row)
-
-    st.success("✅ Your predictions have been saved to Google Sheet!")
-
-
-st.button("💾 Submit Prediction", on_click=save_to_sheet)
+if st.button("Save Prediction"):
+    if not user_name:
+        st.error("Please enter your name!")
+    else:
+        save_data = []
+        for team, players in team_selection.items():
+            save_data.append([user_name, team] + players)
+        for row in save_data:
+            prediction_sheet.append_row(row)
+        st.success("Prediction saved successfully!")
