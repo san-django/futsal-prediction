@@ -14,7 +14,7 @@ creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
 gc = gspread.authorize(creds)
 
 # Name of the sheet in Google Sheets
-PREDICTION_SHEET_NAME = "team prediction"
+PREDICTION_SHEET_NAME = "teamprediction"
 prediction_sheet = gc.open(PREDICTION_SHEET_NAME).sheet1
 
 # --- Player list embedded ---
