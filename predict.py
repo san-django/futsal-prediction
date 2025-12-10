@@ -9,8 +9,8 @@ from oauth2client.service_account import ServiceAccountCredentials
 
 print("Current working directory: ", os.getcwd())
 # changes the working directory to path where the project.py is ##
-os.chdir('C:/Users/SANJAYA/python/futsal')
-excel_filename = r"C:\Users\SANJAYA\python\futsal\player.xlsx"
+# os.chdir('C:/Users/SANJAYA/python/futsal')
+excel_filename = r"player.xlsx"
 df = pd.read_excel(excel_filename)
 players = df.iloc[:, 0].dropna().astype(str).tolist()
 
