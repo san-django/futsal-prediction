@@ -1,3 +1,4 @@
+import json
 import os
 import streamlit as st
 import pandas as pd
@@ -26,16 +27,16 @@ st.title("🏆 Futsal Team Prediction")
 player_name = st.text_input("Enter your name / identifier:")
 
 # Google Sheets setup
-SERVICE_ACCOUNT_JSON = r"C:\Users\SANJAYA\python\futsal\predictservice.json"
-SHEET_NAME = "team prediction"
 
-scope = ["https://spreadsheets.google.com/feeds",
-         "https://www.googleapis.com/auth/drive"]
-creds = ServiceAccountCredentials.from_json_keyfile_name(
-    SERVICE_ACCOUNT_JSON, scope)
+# Load credentials from Streamlit secrets
+creds_dict = st.secrets["google_service_account"]
+creds_json = json.dumps(creds_dict)
+creds = ServiceAccountCredentials.from_json_keyfile_dict(
+    json.loads(creds_json),
+    ['https://spreadsheets.google.com/feeds',
+        'https://www.googleapis.com/auth/drive']
+)
 gc = gspread.authorize(creds)
-SHEET_ID = "1n89U49NJ5JTQ0_YSA3li1AEgOJ_wpHcCsupRCLuf7iQ"  # <-- your sheet ID here
-sheet = gc.open_by_key(SHEET_ID).sheet1
 
 # Function to get available players
 
